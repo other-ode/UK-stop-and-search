@@ -1,8 +1,9 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-
+import lux
 import get_data
+import streamlit.components.v1 as components
 
 # https://www.webfx.com/tools/emoji-cheat-sheet/
 st.set_page_config(page_title="Stop and Search",
@@ -14,7 +15,7 @@ st.set_page_config(page_title="Stop and Search",
 
 siteHeader = st.container()
 first_column, second_column, third_column, fourth_column = st.columns(4)
-reasonVisualization = st.container()
+# reasonVisualization = st.container()
 
 df_availability = get_data.get_availability_data()
 df_dates = df_availability["date"].unique()
@@ -35,8 +36,8 @@ city_in_report = st.sidebar.selectbox(
 
 year, month = date_of_report.split('-')
 
-#st.sidebar.write(year +"    "+ month)
-
+# st.sidebar.write(year +"    "+ month)
+# @st.cache:
 df = get_data.generate_df(month, year, city_in_report)
 
 with siteHeader:
@@ -45,34 +46,36 @@ with siteHeader:
     st.text("In this project I look into stop and search data provided by UK Police")
     st.markdown("##")
 
+# TOP KPIs - Total Stop and Search, & arrest made and no action taken
 total_stop_and_search = len(df)
 arrests_made = len(df.query("outcome == 'Arrest'"))  # int(df["outcome"])
-percentage_of_arrest = (arrests_made/total_stop_and_search)*100
+
+percentage_of_arrest = (arrests_made / total_stop_and_search) * 100
 
 with first_column:
-    st.subheader(f"Total Stop and Search for")
-    st.subheader(f"{city_in_report}")
-    st.subheader(f"{total_stop_and_search}")
-
-with second_column:
     st.subheader(f"Arrests")
     st.subheader(str(round(percentage_of_arrest, 2)) + "%")
 
-with third_column:
+with second_column:
     st.subheader(f"No Action Taken")
     st.subheader(str(round(percentage_of_arrest, 2)) + "%")
 
-
+with third_column:
+    st.subheader(f"Total Stop and Search for {city_in_report.title()}")
+    st.subheader(f"{total_stop_and_search}")
 st.markdown("---")
 
-with reasonVisualization:
-    st.dataframe(df)
-    # st.header('Dataset: Police Stop and Search Data')
-    # st.text('I found this dataset at https://data.police.uk/')
-    #reason_data = pd.DataFrame(df['gender'].value_counts())
-    #st.bar_chart(reason_data)
-    # st.dataframe(total_stop_and_search)
-    # st.dataframe(arrests_made)
-    # st.write(total_stop_and_search)
-    # st.write(arrests_made)
+df.intent = ["age_range", "force"]
+html_content = pd.DataFrame(df).save_as_html(output=True)
+components.html(html_content, width=800, height=350)
 
+# with reasonVisualization:
+#     st.dataframe(df)
+# st.header('Dataset: Police Stop and Search Data')
+# st.text('I found this dataset at https://data.police.uk/')
+# reason_data = pd.DataFrame(df['gender'].value_counts())
+# st.bar_chart(reason_data)
+# st.dataframe(total_stop_and_search)
+# st.dataframe(arrests_made)
+# st.write(total_stop_and_search)
+# st.write(arrests_made)
